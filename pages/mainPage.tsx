@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { StatusBar, SafeAreaView, ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity, Keyboard } from 'react-native';
+import { ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity, Keyboard, Alert } from 'react-native';
 import axios, { AxiosRequestConfig } from 'axios';
 import get_dummy_data from '../dummy_data';
+import QuestionCard from './components.tsx/questionCard';
 
 
 export default function Dashboard(props:any) {
@@ -19,7 +20,8 @@ export default function Dashboard(props:any) {
 
   const handleSearch = () => {
     Keyboard.dismiss();
-    console.log(query);
+    Alert.alert('Searching: ',query);
+    getQuestionData();
   }
 
   const showQuestion = (questionData: any) => {
@@ -33,8 +35,6 @@ export default function Dashboard(props:any) {
 
   return (
     <View style={styles.mainContainer} >
-      {/* <AppStatusBar style={styles.statusBar} /> */}
-      {/* <SafeAreaView style={styles.topSafeArea} /> */}
       <View style={styles.searchWrapper}>
         <TextInput style={styles.input} placeholder='Search' value={query} onChangeText={text => setQuery(text)}></TextInput>
         <TouchableOpacity onPress={handleSearch}>
@@ -47,12 +47,7 @@ export default function Dashboard(props:any) {
         <View style={styles.container}>
             {questionData.map((question: any, index:number) => {
               return (
-                <TouchableOpacity style={styles.questionContainer} key={index} onPress={() => showQuestion(question)}>
-                  <View style={styles.questionDataRow}>
-                    <Text>{question.reputation}</Text>
-                    <Text>{question.title}</Text>
-                  </View>
-                </TouchableOpacity>
+                <QuestionCard question={question} index={index} showQuestion={showQuestion} />
               )
             })}
         </View>
@@ -65,43 +60,36 @@ const styles = StyleSheet.create({
   mainContainer: {
     flex: 1,
     backgroundColor: '#E8EAED',
-    paddingVertical: '5%',
+    paddingVertical: 20,
     paddingHorizontal: '7%'
   },
   searchWrapper: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: 10,
   },
   input: {
+    marginRight: 30,
+    flex: 1,
     paddingHorizontal: 20,
     backgroundColor: "#fff",
-    paddingVertical: 10,
+    paddingVertical: 4,
     width: '65%',
     borderRadius: 25,
     borderColor: '#c0c0c0',
     borderWidth: 1,
   },
-  questionContainer: {
-    width: '100%'
+  searchBtnContainer: {
+    alignItems: 'center',
   },
-  questionDataRow: {
-    width: '100%',
-    marginVertical: 10,
-    padding: 10,
-    borderRadius: 10,
-    backgroundColor: '#fff',
+  searchBtn: {
+    alignItems: 'center',
   },
-  searchBtnContainer : {},
-  searchBtn : {},
   container: {
     flex: 1,
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  topSafeArea: {
-    flex: 0,
-    backgroundColor: '#000'
   }
 });
