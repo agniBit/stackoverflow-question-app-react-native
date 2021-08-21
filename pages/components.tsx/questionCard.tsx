@@ -18,13 +18,13 @@ export default function QuestionCard(props: any) {
   }
 
   return (
-    <TouchableOpacity style={styles.questionContainer} key={props.index} onPress={() => props.showQuestion(props.question)}>
+    <TouchableOpacity style={styles.questionContainer} key={'QuestionCard_'+props.index} onPress={() => props.showQuestion(props.question)}>
       <View style={styles.questionDataRow}>
         <Text style={styles.title}>{props.question.title}</Text>
         <View style={styles.tags}>
           {
             props.question.tags.map((tag: string, index:number) => {
-              return <Text key={index} style={styles.tagText}>{tag}</Text>
+              return <Text key={"QuestionCard_tags_"+index} style={styles.tagText}>{tag}</Text>
             })
           }
         </View>
