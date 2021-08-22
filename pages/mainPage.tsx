@@ -1,33 +1,68 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity, Keyboard, Alert } from 'react-native';
-import axios, { AxiosRequestConfig } from 'axios';
-import get_dummy_data from '../dummy_data';
+import { ScrollView, StyleSheet, Text, View, TextInput, TouchableOpacity, Keyboard, Alert, RefreshControl, Platform, ToastAndroid } from 'react-native';
+import axios from 'axios';
 import QuestionCard from './components.tsx/questionCard';
+import { getCache, setCache } from './components.tsx/cache';
 
 
 export default function Dashboard(props:any) {
   const [questionData, setQuestionData] = useState(Array);
-  const [limit, setLimit] = useState(20);
-  const [skip, setSkip] = useState(0);
+  const [limit, setLimit] = useState(10);
   const [query, setQuery] = useState('');
+  const [currentQuery, setCurrentQuery] = useState(''); // check when user click on search else fetch data from current query i.e. when fetch more data
   const navigation = props.navigation;
 
   async function getQuestionData() {
-    // const response = await axios.get(`https://api.stackexchange.com/2.3/search/advanced?pagesize=${limit}&order=desc&sort=relevance&q=${query}&site=stackoverflow`)
-    // setQuestionData(response.data.items);
-    setQuestionData(get_dummy_data().items);
+    if (currentQuery.trim()) {
+      try {
+        const response = await axios.get(`https://api.stackexchange.com/2.3/search/advanced?pagesize=${limit}&order=desc&sort=relevance&q=${encodeURI(currentQuery.trim())}&site=stackoverflow`)
+        if (response.status == 200 && response.data) {
+          setQuestionData(response.data.items);
+          setCache(query, response.data);
+        } else {
+          // check in cached data
+          const data = await getCache(query);
+          if (data) setQuestionData(JSON.parse(data).items);
+        }
+      } catch {
+        // if any other error happen try to fetch from cached data
+        const data = await getCache(query);
+        if (data) setQuestionData(JSON.parse(data).items);
+      }
+    }
+  }
+
+  function notifyMessage(msg: string) {
+    if (Platform.OS === 'android') {
+      ToastAndroid.show(msg, ToastAndroid.SHORT)
+    } else {
+      Alert.alert(msg);
+    }
   }
 
   const handleSearch = () => {
     Keyboard.dismiss();
-    Alert.alert('Searching: ',query);
+    setCurrentQuery(query);
     getQuestionData();
+    notifyMessage('Searching :- ' + query);
   }
 
   const showQuestion = (questionData: any) => {
-    console.log(questionData);
     navigation.navigate('ShowQuestionDetails', {questionData: questionData})
   }
+  
+  
+  const refreshList = () => {
+    notifyMessage('Refreshing...');
+    setLimit(limit + 10);
+    getQuestionData();
+  }
+
+  const isCloseToBottom = (data: {layoutMeasurement:any, contentOffset:any, contentSize:any}) => {
+    const paddingToBottom = 20;
+    return data.layoutMeasurement.height + data.contentOffset.y >=
+      data.contentSize.height - paddingToBottom;
+  };
 
   useEffect(() => {
     getQuestionData()
@@ -43,7 +78,14 @@ export default function Dashboard(props:any) {
           </View>
         </TouchableOpacity>
       </View>
-      <ScrollView>
+      <ScrollView
+        onScroll={({nativeEvent}) => {
+          if (isCloseToBottom(nativeEvent)) {
+            refreshList();
+          }
+        }}
+        scrollEventThrottle={400}
+      >
         <View style={styles.container}>
             {questionData.map((question: any, index:number) => {
               return (
@@ -85,6 +127,10 @@ const styles = StyleSheet.create({
   },
   searchBtn: {
     alignItems: 'center',
+    backgroundColor: '#25C03F',
+    borderRadius: 20,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
   },
   container: {
     flex: 1,
