@@ -15,7 +15,7 @@ export default function Dashboard(props:any) {
   async function getQuestionData() {
     if (currentQuery.trim()) {
       try {
-        const response = await axios.get(`https://api.stackexchange.com/2.3/search/advanced?pagesize=${limit}&order=desc&sort=relevance&q=${encodeURI(currentQuery.trim())}&site=stackoverflow`)
+        const response = await axios.get(`https://api.stackexchange.com/2.3/search/advanced?pagesize=${limit}&order=desc&sort=relevance&q=${encodeURI(currentQuery.trim())}&answers=5&site=stackoverflow&filter=!6VvPDzQHbd2UL`)
         if (response.status == 200 && response.data) {
           setQuestionData(response.data.items);
           setCache(query, response.data);
